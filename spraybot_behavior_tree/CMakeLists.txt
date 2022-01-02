@@ -54,6 +54,7 @@ if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # Disable copyright and license checks
   set(ament_cmake_copyright_FOUND TRUE)
+  list(APPEND AMENT_LINT_AUTO_EXCLUDE ament_cmake_cpplint)
   ament_lint_auto_find_test_dependencies()
   ament_cpplint(FILTERS "-legal/copyright" "-build/header_guard" "-build/include_order")
 endif()
