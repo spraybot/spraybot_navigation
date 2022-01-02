@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<root>
+  <TreeNodesModel>
+
+    <Action ID="NextGoal">
+        <input_port name="input_goals">Destinations to plan through</input_port>
+        <output_port name="goal">Destination to plan to</output_port>
+        <output_port name="output_goals">Destinations to plan through, with current goal removed</output_port>   
+    </Action>
+
+    <Action ID="ConvertLL2Goal">
+      <input_port name="ll_goal">Input goal in geographic coordinates</input_port>
+      <output_port name="goal">Output goal in local coordinates</output_port>
+  </Action>
+
+  </TreeNodesModel>
+</root>
