@@ -1,0 +1,5 @@
+<library path="spraybot_straightline_planner_plugin">
+	<class name="spraybot_straightline_planner/StraightLine" type="spraybot_straightline_planner::StraightLine" base_class_type="nav2_core::GlobalPlanner">
+	  <description>This is an plugin which produces straight path for row navigation.</description>
+	</class>
+</library>
