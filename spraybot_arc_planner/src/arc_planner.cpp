@@ -39,7 +39,7 @@ void ArcPlanner::configure(
   node_->get_parameter(name_ + ".interpolation_resolution", interpolation_resolution_);
   node_->get_parameter(name_ + ".transform_tolerance", transform_tolerance);
   node_->get_parameter(name_ + ".turn_radius", turn_radius_);
-  
+
 
   transform_tolerance_ = tf2::durationFromSec(transform_tolerance);
 }
@@ -134,7 +134,7 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
     RCLCPP_ERROR(
       node_->get_logger(), "Computing a circular path to the goal is not possible, too small turning radius, the distance between start and goal waypoint is %f and the set radius is %f.", distance,
       turn_radius_);
-      return global_path;
+    return global_path;
   }
   double theta = 2 * asin(distance / 2 / turn_radius_);
   double alpha =
@@ -151,30 +151,34 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
     anti_clk = 0;
   }
 
-  std::cout<<"Coordinates"<<std::endl;
-  std::cout<<transformed_start.pose.position.x<<" "<<transformed_start.pose.position.y<<std::endl;
-  std::cout<<transformed_goal.pose.position.x<<" "<<transformed_goal.pose.position.y<<std::endl;
-  std::cout<<"Distance"<<std::endl;
-  std::cout<<distance<<std::endl;
-  std::cout<<"Theta"<<std::endl;
-  std::cout<<theta<<std::endl;
-  std::cout<<"Alpha"<<std::endl;
-  std::cout<<alpha<<std::endl;
-  std::cout<<"Phi"<<std::endl;
-  std::cout<<phi<<std::endl;
-  std::cout<<"Yaw"<<std::endl;
-  std::cout<<yaw<<std::endl;
-  std::cout<<"Direction"<<std::endl;
-  std::cout<<dir<<std::endl;
+  std::cout << "Coordinates" << std::endl;
+  std::cout << transformed_start.pose.position.x << " " << transformed_start.pose.position.y <<
+    std::endl;
+  std::cout << transformed_goal.pose.position.x << " " << transformed_goal.pose.position.y <<
+    std::endl;
+  std::cout << "Distance" << std::endl;
+  std::cout << distance << std::endl;
+  std::cout << "Theta" << std::endl;
+  std::cout << theta << std::endl;
+  std::cout << "Alpha" << std::endl;
+  std::cout << alpha << std::endl;
+  std::cout << "Phi" << std::endl;
+  std::cout << phi << std::endl;
+  std::cout << "Yaw" << std::endl;
+  std::cout << yaw << std::endl;
+  std::cout << "Direction" << std::endl;
+  std::cout << dir << std::endl;
 
   if (((dir == 1) && (transformed_goal.pose.position.y > transformed_start.pose.position.y)) ||
     ((dir == 0) && (transformed_goal.pose.position.y < transformed_start.pose.position.y)))
   {
     for (int i = 0; i < total_number_of_loop; ++i) {
       geometry_msgs::msg::PoseStamped pose;
-      pose.pose.position.x = transformed_start.pose.position.x + (turn_radius_ * c) - turn_radius_ * cos(
+      pose.pose.position.x = transformed_start.pose.position.x + (turn_radius_ * c) - turn_radius_ *
+        cos(
         phi + i * interpolation_resolution_);
-      pose.pose.position.y = transformed_start.pose.position.y - (turn_radius_ * s) + turn_radius_ * sin(
+      pose.pose.position.y = transformed_start.pose.position.y - (turn_radius_ * s) + turn_radius_ *
+        sin(
         phi + i * interpolation_resolution_);
       pose.pose.orientation.w = 1.0;
       pose.header.stamp = node_->now();
@@ -187,9 +191,11 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
   {
     for (int i = total_number_of_loop; i > 0; --i) {
       geometry_msgs::msg::PoseStamped pose;
-      pose.pose.position.x = transformed_goal.pose.position.x - (turn_radius_ * c) + turn_radius_ * cos(
+      pose.pose.position.x = transformed_goal.pose.position.x - (turn_radius_ * c) + turn_radius_ *
+        cos(
         phi + i * interpolation_resolution_);
-      pose.pose.position.y = transformed_goal.pose.position.y + (turn_radius_ * s) - turn_radius_ * sin(
+      pose.pose.position.y = transformed_goal.pose.position.y + (turn_radius_ * s) - turn_radius_ *
+        sin(
         phi + i * interpolation_resolution_);
       pose.pose.orientation.w = 1.0;
       pose.header.stamp = node_->now();
