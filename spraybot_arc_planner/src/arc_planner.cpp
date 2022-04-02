@@ -2,7 +2,6 @@
  *  Author: Vrushali Patil (soundarya.patil@gmail.com)
  *
  */
-
 #include <cmath>
 #include <string>
 #include <memory>
@@ -146,9 +145,9 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
   double c = cos(phi);
   double s = sin(phi);
   int total_number_of_loop = theta / interpolation_resolution_;
-  int anti_clk {1};
+  int anti_clk {0};
   if (((yaw >= (-M_PI)) && (yaw <= (-M_PI / 2))) or ((yaw >= M_PI / 2) && (yaw <= M_PI))) {
-    anti_clk = 0;
+    anti_clk = 1;
   }
 
   std::cout << "Coordinates" << std::endl;
@@ -167,17 +166,20 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
   std::cout << "Yaw" << std::endl;
   std::cout << yaw << std::endl;
   std::cout << "Direction" << std::endl;
-  std::cout << dir << std::endl;
+  std::cout << anti_clk << std::endl;
 
-  if (((dir == 1) && (transformed_goal.pose.position.y > transformed_start.pose.position.y)) ||
-    ((dir == 0) && (transformed_goal.pose.position.y < transformed_start.pose.position.y)))
+  const auto & start_pos = transformed_start.pose.position;
+  const auto & goal_pos = transformed_goal.pose.position;
+
+  if (((anti_clk == 0) && (goal_pos.y > start_pos.y)) ||
+    ((anti_clk == 1) && (goal_pos.y < start_pos.y)))
   {
     for (int i = 0; i < total_number_of_loop; ++i) {
       geometry_msgs::msg::PoseStamped pose;
-      pose.pose.position.x = transformed_start.pose.position.x + (turn_radius_ * c) - turn_radius_ *
+      pose.pose.position.x = start_pos.x + (turn_radius_ * c) - turn_radius_ *
         cos(
         phi + i * interpolation_resolution_);
-      pose.pose.position.y = transformed_start.pose.position.y - (turn_radius_ * s) + turn_radius_ *
+      pose.pose.position.y = start_pos.y - (turn_radius_ * s) + turn_radius_ *
         sin(
         phi + i * interpolation_resolution_);
       pose.pose.orientation.w = 1.0;
@@ -185,16 +187,16 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
       pose.header.frame_id = global_frame_;
       global_path.poses.push_back(pose);
     }
-  } else if (((dir == 1) &&
-    (transformed_goal.pose.position.y < transformed_start.pose.position.y)) ||
-    ((dir == 0) && (transformed_goal.pose.position.y > transformed_start.pose.position.y)))
+  } else if (((anti_clk == 0) &&
+    (goal_pos.y < start_pos.y)) ||
+    ((anti_clk == 1) && (goal_pos.y > start_pos.y)))
   {
     for (int i = total_number_of_loop; i > 0; --i) {
       geometry_msgs::msg::PoseStamped pose;
-      pose.pose.position.x = transformed_goal.pose.position.x - (turn_radius_ * c) + turn_radius_ *
+      pose.pose.position.x = goal_pos.x - (turn_radius_ * c) + turn_radius_ *
         cos(
         phi + i * interpolation_resolution_);
-      pose.pose.position.y = transformed_goal.pose.position.y + (turn_radius_ * s) - turn_radius_ *
+      pose.pose.position.y = goal_pos.y + (turn_radius_ * s) - turn_radius_ *
         sin(
         phi + i * interpolation_resolution_);
       pose.pose.orientation.w = 1.0;
