@@ -80,9 +80,9 @@ public:
   void deactivate() override;
 
   bool transformPose(
-      const std::string frame,
-      const geometry_msgs::msg::PoseStamped &in_pose,
-      geometry_msgs::msg::PoseStamped &out_pose) const;
+    const std::string frame,
+    const geometry_msgs::msg::PoseStamped & in_pose,
+    geometry_msgs::msg::PoseStamped & out_pose) const;
 
   // This method creates path for given start and goal pose.
   nav_msgs::msg::Path createPlan(

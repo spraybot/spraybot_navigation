@@ -2,6 +2,7 @@
  *  Author: Vrushali Patil (soundarya.patil@gmail.com)
  *
  */
+
 #pragma once
 
 #include <string>
@@ -45,7 +46,7 @@ public:
   nav_msgs::msg::Path createPlan(
     const geometry_msgs::msg::PoseStamped & start,
     const geometry_msgs::msg::PoseStamped & goal) override;
-
+  
 private:
   std::shared_ptr<tf2_ros::Buffer> tf_;
   nav2_util::LifecycleNode::SharedPtr node_;
@@ -53,6 +54,7 @@ private:
   std::string global_frame_, name_;
   double interpolation_resolution_;
   double turn_radius_;
+  int create_arc_;
   tf2::Duration transform_tolerance_;
 };
 
