@@ -28,10 +28,18 @@ void ArcPlanner::configure(
   nav2_util::declare_parameter_if_not_declared(
     node_, name_ + ".interpolation_resolution", rclcpp::ParameterValue(
       0.1));
+
+  nav2_util::declare_parameter_if_not_declared(
+    node_, name_ + ".turn_radius", rclcpp::ParameterValue(
+      1.0));
+
   nav2_util::declare_parameter_if_not_declared(
     node_, name_ + ".transform_tolerance", rclcpp::ParameterValue(0.1));
+
   node_->get_parameter(name_ + ".interpolation_resolution", interpolation_resolution_);
   node_->get_parameter(name_ + ".transform_tolerance", transform_tolerance);
+  node_->get_parameter(name_ + ".turn_radius", turn_radius_);
+  
 
   transform_tolerance_ = tf2::durationFromSec(transform_tolerance);
 }
@@ -122,41 +130,52 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
     transformed_goal.pose.position.x - transformed_start.pose.position.x,
     transformed_goal.pose.position.y - transformed_start.pose.position.y);
 
-  double radius = 0.762;
-
-  if (distance > 2 * radius) {
+  if (distance > 2 * turn_radius_) {
     RCLCPP_ERROR(
       node_->get_logger(), "Computing a circular path to the goal is not possible, too small turning radius, the distance between start and goal waypoint is %f and the set radius is %f.", distance,
-      radius);
+      turn_radius_);
+      return global_path;
   }
-  double theta = 2 * asin(distance / 2 / radius);
+  double theta = 2 * asin(distance / 2 / turn_radius_);
   double alpha =
     atan2(
     (transformed_goal.pose.position.y - transformed_start.pose.position.y),
     (transformed_goal.pose.position.x - transformed_start.pose.position.x));
   double phi = ((M_PI - theta) / 2) - alpha;
-  double yaw = poseToYaw(start);
+  double yaw = poseToYaw(goal);
   double c = cos(phi);
   double s = sin(phi);
   int total_number_of_loop = theta / interpolation_resolution_;
-  int dir {0};
+  int anti_clk {1};
   if (((yaw >= (-M_PI)) && (yaw <= (-M_PI / 2))) or ((yaw >= M_PI / 2) && (yaw <= M_PI))) {
-    dir = 1;
+    anti_clk = 0;
   }
+
+  std::cout<<"Coordinates"<<std::endl;
+  std::cout<<transformed_start.pose.position.x<<" "<<transformed_start.pose.position.y<<std::endl;
+  std::cout<<transformed_goal.pose.position.x<<" "<<transformed_goal.pose.position.y<<std::endl;
+  std::cout<<"Distance"<<std::endl;
+  std::cout<<distance<<std::endl;
+  std::cout<<"Theta"<<std::endl;
+  std::cout<<theta<<std::endl;
+  std::cout<<"Alpha"<<std::endl;
+  std::cout<<alpha<<std::endl;
+  std::cout<<"Phi"<<std::endl;
+  std::cout<<phi<<std::endl;
+  std::cout<<"Yaw"<<std::endl;
+  std::cout<<yaw<<std::endl;
+  std::cout<<"Direction"<<std::endl;
+  std::cout<<dir<<std::endl;
 
   if (((dir == 1) && (transformed_goal.pose.position.y > transformed_start.pose.position.y)) ||
     ((dir == 0) && (transformed_goal.pose.position.y < transformed_start.pose.position.y)))
   {
     for (int i = 0; i < total_number_of_loop; ++i) {
       geometry_msgs::msg::PoseStamped pose;
-      pose.pose.position.x = transformed_start.pose.position.x + (radius * c) - radius * cos(
+      pose.pose.position.x = transformed_start.pose.position.x + (turn_radius_ * c) - turn_radius_ * cos(
         phi + i * interpolation_resolution_);
-      pose.pose.position.y = transformed_start.pose.position.y - (radius * s) + radius * sin(
+      pose.pose.position.y = transformed_start.pose.position.y - (turn_radius_ * s) + turn_radius_ * sin(
         phi + i * interpolation_resolution_);
-      pose.pose.position.z = 0.0;
-      pose.pose.orientation.x = 0.0;
-      pose.pose.orientation.y = 0.0;
-      pose.pose.orientation.z = 0.0;
       pose.pose.orientation.w = 1.0;
       pose.header.stamp = node_->now();
       pose.header.frame_id = global_frame_;
@@ -168,14 +187,10 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
   {
     for (int i = total_number_of_loop; i > 0; --i) {
       geometry_msgs::msg::PoseStamped pose;
-      pose.pose.position.x = transformed_goal.pose.position.x - (radius * c) + radius * cos(
+      pose.pose.position.x = transformed_goal.pose.position.x - (turn_radius_ * c) + turn_radius_ * cos(
         phi + i * interpolation_resolution_);
-      pose.pose.position.y = transformed_goal.pose.position.y + (radius * s) - radius * sin(
+      pose.pose.position.y = transformed_goal.pose.position.y + (turn_radius_ * s) - turn_radius_ * sin(
         phi + i * interpolation_resolution_);
-      pose.pose.position.z = 0.0;
-      pose.pose.orientation.x = 0.0;
-      pose.pose.orientation.y = 0.0;
-      pose.pose.orientation.z = 0.0;
       pose.pose.orientation.w = 1.0;
       pose.header.stamp = node_->now();
       pose.header.frame_id = global_frame_;
