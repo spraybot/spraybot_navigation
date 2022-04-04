@@ -77,13 +77,12 @@ install(FILES global_planner_plugin.xml
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # uncomment the line when a copyright and license is not present in all source files
-  #set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # uncomment the line when this package is not in a git repo
-  #set(ament_cmake_cpplint_FOUND TRUE)
+  # Disable copyright and license checks
+  set(ament_cmake_copyright_FOUND TRUE)
+  # Disable cpplint and manually call it with filters later
+  list(APPEND AMENT_LINT_AUTO_EXCLUDE ament_cmake_cpplint)
   ament_lint_auto_find_test_dependencies()
+  ament_cpplint(FILTERS "-legal/copyright" "-build/header_guard" "-build/include_order")
 endif()
 
 
