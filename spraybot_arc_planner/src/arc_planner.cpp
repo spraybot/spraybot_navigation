@@ -1,7 +1,9 @@
-/*
- *  Author: Vrushali Patil (soundarya.patil@gmail.com)
+/*********************************************************************
  *
- */
+ * Author: Vrushali Patil (soundarya.patil@gmail.com)
+ *
+ *********************************************************************/
+
 #include <cmath>
 #include <string>
 #include <memory>
@@ -139,7 +141,9 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
 
   if (chord_len > 2 * turn_radius_) {
     RCLCPP_ERROR(
-      node_->get_logger(), "Computing a circular path to the goal is not possible, too small turning radius, the distance between start and goal waypoint is %f and the set radius is %f.", chord_len,
+      node_->get_logger(), "Computing a circular path to the goal is not possible");
+    RCLCPP_ERROR(
+      node_->get_logger(), "The chord length is %f and the set radius is %f.", chord_len,
       turn_radius_);
     return global_path;
   }
@@ -151,20 +155,21 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
     (goal_pos.x - start_pos.x));
   double phi = ((M_PI - theta) / 2) - alpha;
   double goal_yaw = poseToYaw(goal);
-  
-  bool clockwise {false};
+  double start_yaw = poseToYaw(start);
 
-  if (((goal_yaw >= (-M_PI)) && (goal_yaw <= (-M_PI / 2))) or ((goal_yaw >= M_PI / 2) &&
+  bool clockwise {false};  // Flag to decide if clockwise or anti-clockwise path should be taken
+
+  if (((goal_yaw >= (-M_PI)) && (goal_yaw <= (-M_PI / 2))) || ((goal_yaw >= M_PI / 2) &&
     (goal_yaw <= M_PI)))
   {
     clockwise = !clockwise;
   }
 
-  if (((!clockwise) && (goal_pos.y > start_pos.y)) ||
-    ((clockwise) && (goal_pos.y < start_pos.y)))
-  {
-    if (create_arc_) {
-      int number_of_waypoints = theta / interpolation_resolution_;
+  if (create_arc_) {
+    int number_of_waypoints = theta / interpolation_resolution_;
+    if (((!clockwise) && (goal_pos.y > start_pos.y)) ||
+      ((clockwise) && (goal_pos.y < start_pos.y)))
+    {
       for (int i = 0; i < number_of_waypoints; ++i) {
         geometry_msgs::msg::PoseStamped pose;
         pose.pose.position.x = start_pos.x + (turn_radius_ * cos(phi)) - turn_radius_ *
@@ -178,29 +183,9 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
         pose.header.frame_id = global_frame_;
         global_path.poses.push_back(pose);
       }
-    } else {
-      int number_of_waypoints = (2 * M_PI - theta) / interpolation_resolution_;
-      for (int i = number_of_waypoints; i > 0; --i) {
-        geometry_msgs::msg::PoseStamped pose;
-        pose.pose.position.x = goal_pos.x - (turn_radius_ * cos(phi)) + turn_radius_ *
-          cos(
-          i * interpolation_resolution_ - phi);
-        pose.pose.position.y = goal_pos.y + (turn_radius_ * sin(phi)) + turn_radius_ *
-          sin(
-          i * interpolation_resolution_ - phi);
-
-        pose.pose.orientation.w = 1.0;
-        pose.header.stamp = node_->now();
-        pose.header.frame_id = global_frame_;
-        global_path.poses.push_back(pose);
-      }
-    }
-  } else if (((!clockwise) &&
-    (goal_pos.y < start_pos.y)) ||
-    ((clockwise) && (goal_pos.y > start_pos.y)))
-  {
-    if (create_arc_) {
-      int number_of_waypoints = theta / interpolation_resolution_;
+    } else if ((!clockwise && goal_pos.y < start_pos.y) || // NOLINT
+      (clockwise && goal_pos.y > start_pos.y))
+    {
       for (int i = number_of_waypoints; i > 0; --i) {
         geometry_msgs::msg::PoseStamped pose;
         pose.pose.position.x = goal_pos.x - (turn_radius_ * cos(phi)) + turn_radius_ *
@@ -215,24 +200,6 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
         pose.header.frame_id = global_frame_;
         global_path.poses.push_back(pose);
       }
-    } else {
-      int number_of_waypoints = (2 * M_PI - theta) / interpolation_resolution_;
-      for (int i = 0; i < number_of_waypoints; ++i) {
-        geometry_msgs::msg::PoseStamped pose;
-        pose.pose.position.x = start_pos.x + (turn_radius_ * cos(phi)) - turn_radius_ *
-          cos(
-          i * interpolation_resolution_ - phi);
-        pose.pose.position.y = start_pos.y - (turn_radius_ * sin(phi)) - turn_radius_ *
-          sin(
-          i * interpolation_resolution_ - phi);
-
-        pose.pose.orientation.w = 1.0;
-        pose.header.stamp = node_->now();
-        pose.header.frame_id = global_frame_;
-        global_path.poses.push_back(pose);
-      }
-
-
     }
   }
 

@@ -1,7 +1,8 @@
-/*
- *  Author: Vrushali Patil (soundarya.patil@gmail.com)
+/*********************************************************************
  *
- */
+ * Author: Vrushali Patil (soundarya.patil@gmail.com)
+ *
+ *********************************************************************/
 
 #pragma once
 
@@ -46,7 +47,7 @@ public:
   nav_msgs::msg::Path createPlan(
     const geometry_msgs::msg::PoseStamped & start,
     const geometry_msgs::msg::PoseStamped & goal) override;
-  
+
 private:
   std::shared_ptr<tf2_ros::Buffer> tf_;
   nav2_util::LifecycleNode::SharedPtr node_;

@@ -3,7 +3,7 @@
 <package format="3">
   <name>spraybot_arc_planner</name>
   <version>1.0.0</version>
-  <description>Simple straight line planner.</description>
+  <description>Arc Planner</description>
   <maintainer email="soundarya.patil@gmail.com">Vrushali Patil</maintainer>
   <license>BSD-3-Clause</license>
 

@@ -1,5 +1,5 @@
 <library path="spraybot_arc_planner_plugin">
 	<class name="spraybot_arc_planner/ArcPlanner" type="spraybot_arc_planner::ArcPlanner" base_class_type="nav2_core::GlobalPlanner">
-	  <description>This is an example plugin which produces curved path.</description>
+	  <description>This plugin produces circular path of known radius from the start pose to the goal pose </description>
 	</class>
 </library>
