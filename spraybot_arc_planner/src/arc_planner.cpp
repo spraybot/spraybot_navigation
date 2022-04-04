@@ -47,21 +47,21 @@ void ArcPlanner::configure(
 void ArcPlanner::cleanup()
 {
   RCLCPP_INFO(
-    node_->get_logger(), "CleaningUp plugin %s of type NavfnPlanner",
+    node_->get_logger(), "CleaningUp plugin %s of type ArcPlanner",
     name_.c_str());
 }
 
 void ArcPlanner::activate()
 {
   RCLCPP_INFO(
-    node_->get_logger(), "Activating plugin %s of type NavfnPlanner",
+    node_->get_logger(), "Activating plugin %s of type ARcPlanner",
     name_.c_str());
 }
 
 void ArcPlanner::deactivate()
 {
   RCLCPP_INFO(
-    node_->get_logger(), "Deactivating plugin %s of type NavfnPlanner",
+    node_->get_logger(), "Deactivating plugin %s of type ARcPlanner",
     name_.c_str());
 }
 
@@ -156,15 +156,15 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
   // Flag to decide if clockwise or anti-clockwise path should be taken
   bool clockwise = false;
 
-  if (((goal_yaw >= (-M_PI)) && (goal_yaw <= (-M_PI / 2))) || ((goal_yaw >= M_PI / 2) &&
-    (goal_yaw <= M_PI)))
+  if ((goal_yaw >= -M_PI && goal_yaw <= -M_PI / 2) || (goal_yaw >= M_PI / 2 &&
+    goal_yaw <= M_PI))
   {
     clockwise = !clockwise;
   }
 
   int number_of_waypoints = theta / interpolation_resolution_;
-  if ((!clockwise && (goal_pos.y > start_pos.y)) ||
-    (clockwise && (goal_pos.y < start_pos.y)))
+  if ((!clockwise && goal_pos.y > start_pos.y) ||
+    (clockwise && goal_pos.y < start_pos.y))
   {
     for (int i = 0; i < number_of_waypoints; ++i) {
       geometry_msgs::msg::PoseStamped pose;
