@@ -1,9 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
-project(spraybot_straightline_planner)
+project(spraybot_arc_planner)
 
 # Default to C99
 set(CMAKE_C_STANDARD 99)
-
 
 # Default to C++14
 set(CMAKE_CXX_STANDARD 14)
@@ -48,8 +47,10 @@ set(dependencies
   pluginlib
 )
 
+set(ament_cmake_copyright_FOUND TRUE)
+
 add_library(${library_name} SHARED
-  src/straight_line_planner.cpp
+  src/arc_planner.cpp
 )
 
 ament_target_dependencies(${library_name}
@@ -57,7 +58,6 @@ ament_target_dependencies(${library_name}
 )
 
 target_compile_definitions(${library_name} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
-
 
 pluginlib_export_plugin_description_file(nav2_core global_planner_plugin.xml)
 
@@ -84,7 +84,6 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
   ament_cpplint(FILTERS "-legal/copyright" "-build/header_guard" "-build/include_order")
 endif()
-
 
 ament_export_include_directories(include)
 ament_export_libraries(${library_name})

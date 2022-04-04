@@ -137,22 +137,22 @@ nav_msgs::msg::Path StraightLine::createPlan(
   }
 
   auto magnitude = [](const geometry_msgs::msg::PoseStamped p)
-  {
-    return p.pose.position.x * p.pose.position.x + p.pose.position.y * p.pose.position.y;
-  };
+    {
+      return p.pose.position.x * p.pose.position.x + p.pose.position.y * p.pose.position.y;
+    };
 
   auto yaw = [](const geometry_msgs::msg::PoseStamped p)
-  {
-    tf2::Quaternion q(
+    {
+      tf2::Quaternion q(
         p.pose.orientation.x,
         p.pose.orientation.y,
         p.pose.orientation.z,
         p.pose.orientation.w);
-    tf2::Matrix3x3 m(q);
-    double roll, pitch, yaw;
-    m.getRPY(roll, pitch, yaw);
-    return yaw;
-  };
+      tf2::Matrix3x3 m(q);
+      double roll, pitch, yaw;
+      m.getRPY(roll, pitch, yaw);
+      return yaw;
+    };
 
   geometry_msgs::msg::PoseStamped transformed_goal = transformToGlobalPose(goal);
   geometry_msgs::msg::PoseStamped transformed_start = start;
@@ -165,8 +165,10 @@ nav_msgs::msg::Path StraightLine::createPlan(
     transformed_goal.pose.position.x - transformed_start.pose.position.x,
     transformed_goal.pose.position.y - transformed_start.pose.position.y) /
     interpolation_resolution_;
-  double x_increment = (transformed_goal.pose.position.x - transformed_start.pose.position.x) / total_number_of_loop;
-  double y_increment = (transformed_goal.pose.position.y - transformed_start.pose.position.y) / total_number_of_loop;
+  double x_increment = (transformed_goal.pose.position.x - transformed_start.pose.position.x) /
+    total_number_of_loop;
+  double y_increment = (transformed_goal.pose.position.y - transformed_start.pose.position.y) /
+    total_number_of_loop;
 
   for (int i = 0; i < total_number_of_loop; ++i) {
     geometry_msgs::msg::PoseStamped pose;
