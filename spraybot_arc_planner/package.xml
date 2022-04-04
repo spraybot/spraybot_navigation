@@ -5,8 +5,7 @@
   <version>1.0.0</version>
   <description>Arc Planner</description>
   <maintainer email="soundarya.patil@gmail.com">Vrushali Patil</maintainer>
-  <license>BSD-3-Clause</license>
-
+  <license> TODO: License to be decided </license>
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>rclcpp</depend>

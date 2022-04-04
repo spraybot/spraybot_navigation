@@ -35,17 +35,11 @@ void ArcPlanner::configure(
       1.0));
 
   nav2_util::declare_parameter_if_not_declared(
-    node_, name_ + ".create_arc", rclcpp::ParameterValue(
-      1));
-
-  nav2_util::declare_parameter_if_not_declared(
     node_, name_ + ".transform_tolerance", rclcpp::ParameterValue(0.1));
 
   node_->get_parameter(name_ + ".interpolation_resolution", interpolation_resolution_);
   node_->get_parameter(name_ + ".transform_tolerance", transform_tolerance);
   node_->get_parameter(name_ + ".turn_radius", turn_radius_);
-  node_->get_parameter(name_ + ".create_arc", create_arc_);
-
 
   transform_tolerance_ = tf2::durationFromSec(transform_tolerance);
 }
@@ -139,7 +133,7 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
     goal_pos.x - start_pos.x,
     goal_pos.y - start_pos.y);
 
-  if (chord_len > 2 * turn_radius_) {
+  if (chord_len > 2.0 * turn_radius_) {
     RCLCPP_ERROR(
       node_->get_logger(), "Computing a circular path to the goal is not possible");
     RCLCPP_ERROR(
@@ -148,16 +142,19 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
     return global_path;
   }
 
-  double theta = 2 * asin(chord_len / 2 / turn_radius_);
+  // Angle subtended at the center of the circle
+  double theta = 2 * asin((chord_len / 2) / turn_radius_);
+  // Angle subtended by the start and goal pose
   double alpha =
     atan2(
     (goal_pos.y - start_pos.y),
     (goal_pos.x - start_pos.x));
+  // Sum of all angles of a triangle, theta + (alpha + phi)*2 = 180
   double phi = ((M_PI - theta) / 2) - alpha;
   double goal_yaw = poseToYaw(goal);
   double start_yaw = poseToYaw(start);
-
-  bool clockwise {false};  // Flag to decide if clockwise or anti-clockwise path should be taken
+  // Flag to decide if clockwise or anti-clockwise path should be taken
+  bool clockwise = false;
 
   if (((goal_yaw >= (-M_PI)) && (goal_yaw <= (-M_PI / 2))) || ((goal_yaw >= M_PI / 2) &&
     (goal_yaw <= M_PI)))
@@ -165,44 +162,41 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
     clockwise = !clockwise;
   }
 
-  if (create_arc_) {
-    int number_of_waypoints = theta / interpolation_resolution_;
-    if (((!clockwise) && (goal_pos.y > start_pos.y)) ||
-      ((clockwise) && (goal_pos.y < start_pos.y)))
-    {
-      for (int i = 0; i < number_of_waypoints; ++i) {
-        geometry_msgs::msg::PoseStamped pose;
-        pose.pose.position.x = start_pos.x + (turn_radius_ * cos(phi)) - turn_radius_ *
-          cos(
-          phi + i * interpolation_resolution_);
-        pose.pose.position.y = start_pos.y - (turn_radius_ * sin(phi)) + turn_radius_ *
-          sin(
-          phi + i * interpolation_resolution_);
-        pose.pose.orientation.w = 1.0;
-        pose.header.stamp = node_->now();
-        pose.header.frame_id = global_frame_;
-        global_path.poses.push_back(pose);
-      }
-    } else if ((!clockwise && goal_pos.y < start_pos.y) || // NOLINT
-      (clockwise && goal_pos.y > start_pos.y))
-    {
-      for (int i = number_of_waypoints; i > 0; --i) {
-        geometry_msgs::msg::PoseStamped pose;
-        pose.pose.position.x = goal_pos.x - (turn_radius_ * cos(phi)) + turn_radius_ *
-          cos(
-          phi + i * interpolation_resolution_);
-        pose.pose.position.y = goal_pos.y + (turn_radius_ * sin(phi)) - turn_radius_ *
-          sin(
-          phi + i * interpolation_resolution_);
+  int number_of_waypoints = theta / interpolation_resolution_;
+  if ((!clockwise && (goal_pos.y > start_pos.y)) ||
+    (clockwise && (goal_pos.y < start_pos.y)))
+  {
+    for (int i = 0; i < number_of_waypoints; ++i) {
+      geometry_msgs::msg::PoseStamped pose;
+      pose.pose.position.x = start_pos.x + (turn_radius_ * cos(phi)) - turn_radius_ *
+        cos(
+        phi + i * interpolation_resolution_);
+      pose.pose.position.y = start_pos.y - (turn_radius_ * sin(phi)) + turn_radius_ *
+        sin(
+        phi + i * interpolation_resolution_);
+      pose.pose.orientation.w = 1.0;
+      pose.header.stamp = node_->now();
+      pose.header.frame_id = global_frame_;
+      global_path.poses.push_back(pose);
+    }
+  } else if ((!clockwise && goal_pos.y < start_pos.y) ||   // NOLINT
+    (clockwise && goal_pos.y > start_pos.y))
+  {
+    for (int i = number_of_waypoints; i > 0; --i) {
+      geometry_msgs::msg::PoseStamped pose;
+      pose.pose.position.x = goal_pos.x - (turn_radius_ * cos(phi)) + turn_radius_ *
+        cos(
+        phi + i * interpolation_resolution_);
+      pose.pose.position.y = goal_pos.y + (turn_radius_ * sin(phi)) - turn_radius_ *
+        sin(
+        phi + i * interpolation_resolution_);
 
-        pose.pose.orientation.w = 1.0;
-        pose.header.stamp = node_->now();
-        pose.header.frame_id = global_frame_;
-        global_path.poses.push_back(pose);
-      }
+      pose.pose.orientation.w = 1.0;
+      pose.header.stamp = node_->now();
+      pose.header.frame_id = global_frame_;
+      global_path.poses.push_back(pose);
     }
   }
-
   global_path.poses.push_back(transformed_goal);
   return global_path;
 }

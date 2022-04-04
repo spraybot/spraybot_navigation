@@ -53,9 +53,7 @@ private:
   nav2_util::LifecycleNode::SharedPtr node_;
   nav2_costmap_2d::Costmap2D * costmap_;
   std::string global_frame_, name_;
-  double interpolation_resolution_;
-  double turn_radius_;
-  int create_arc_;
+  double interpolation_resolution_, turn_radius_;
   tf2::Duration transform_tolerance_;
 };
 
