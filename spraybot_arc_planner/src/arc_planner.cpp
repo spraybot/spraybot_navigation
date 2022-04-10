@@ -123,8 +123,8 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
   geometry_msgs::msg::PoseStamped transformed_start = start;
 
   global_path.poses.clear();
-  global_path.header.stamp = node_->now();
-  global_path.header.frame_id = global_frame_;
+  global_path.header.stamp = transformed_goal.header.stamp = node_->now();
+  global_path.header.frame_id = transformed_goal.header.frame_id = global_frame_;
 
   const auto & start_pos = transformed_start.pose.position;
   const auto & goal_pos = transformed_goal.pose.position;
