@@ -123,8 +123,8 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
   geometry_msgs::msg::PoseStamped transformed_start = start;
 
   global_path.poses.clear();
-  global_path.header.stamp = transformed_goal.header.stamp = node_->now();
-  global_path.header.frame_id = transformed_goal.header.frame_id = global_frame_;
+  global_path.header.stamp = node_->now();
+  global_path.header.frame_id = global_frame_;
 
   const auto & start_pos = transformed_start.pose.position;
   const auto & goal_pos = transformed_goal.pose.position;
@@ -154,18 +154,42 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
   double goal_yaw = poseToYaw(goal);
   double start_yaw = poseToYaw(start);
   // Flag to decide if clockwise or anti-clockwise path should be taken
-  bool clockwise = false;
-
-  if ((goal_yaw >= -M_PI && goal_yaw <= -M_PI / 2) || (goal_yaw >= M_PI / 2 &&
-    goal_yaw <= M_PI))
-  {
-    clockwise = !clockwise;
-  }
+  double x_clck;
+  double y_clck;
+  double x_aclck;
+  double y_aclck;
 
   int number_of_waypoints = theta / interpolation_resolution_;
-  if ((!clockwise && goal_pos.y > start_pos.y) ||
-    (clockwise && goal_pos.y < start_pos.y))
-  {
+  int intermediate_way_point = 0.9 * number_of_waypoints;
+
+  // Finding a point near the goal pose on both arcs
+  for (int i = 0; i < intermediate_way_point; ++i) {
+    x_clck = start_pos.x + (turn_radius_ * cos(phi)) - turn_radius_ *
+      cos(
+      phi + i * interpolation_resolution_);
+    y_clck = start_pos.y - (turn_radius_ * sin(phi)) + turn_radius_ *
+      sin(
+      phi + i * interpolation_resolution_);
+  }
+
+  for (int i = number_of_waypoints; i > number_of_waypoints - intermediate_way_point; --i) {
+    x_aclck = goal_pos.x - (turn_radius_ * cos(phi)) + turn_radius_ *
+      cos(
+      phi + i * interpolation_resolution_);
+    y_aclck = goal_pos.y + (turn_radius_ * sin(phi)) - turn_radius_ *
+      sin(
+      phi + i * interpolation_resolution_);
+  }
+
+  double tan_clck = atan2((goal_pos.y - y_clck), (goal_pos.x - x_clck));
+  double tan_aclck = atan2((goal_pos.y - y_aclck), (goal_pos.x - x_aclck));
+  double diff_clck = tan_clck - goal_yaw;
+  double diff_aclck = tan_aclck - goal_yaw;
+  // Warping
+  diff_clck = diff_clck - (2.0 * M_PI) * floor((diff_clck + M_PI) / (2.0 * M_PI));
+  diff_aclck = diff_aclck - (2.0 * M_PI) * floor((diff_aclck + M_PI) / (2.0 * M_PI));
+
+  if ((abs(diff_clck)) < (abs(diff_aclck))) {
     for (int i = 0; i < number_of_waypoints; ++i) {
       geometry_msgs::msg::PoseStamped pose;
       pose.pose.position.x = start_pos.x + (turn_radius_ * cos(phi)) - turn_radius_ *
@@ -179,9 +203,7 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
       pose.header.frame_id = global_frame_;
       global_path.poses.push_back(pose);
     }
-  } else if ((!clockwise && goal_pos.y < start_pos.y) ||   // NOLINT
-    (clockwise && goal_pos.y > start_pos.y))
-  {
+  } else {
     for (int i = number_of_waypoints; i > 0; --i) {
       geometry_msgs::msg::PoseStamped pose;
       pose.pose.position.x = goal_pos.x - (turn_radius_ * cos(phi)) + turn_radius_ *
@@ -197,6 +219,7 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
       global_path.poses.push_back(pose);
     }
   }
+
   global_path.poses.push_back(transformed_goal);
   return global_path;
 }
