@@ -123,8 +123,8 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
   geometry_msgs::msg::PoseStamped transformed_start = start;
 
   global_path.poses.clear();
-  global_path.header.stamp = node_->now();
-  global_path.header.frame_id = global_frame_;
+  global_path.header.stamp = transformed_goal.header.stamp = node_->now();
+  global_path.header.frame_id = transformed_goal.header.frame_id = global_frame_;
 
   const auto & start_pos = transformed_start.pose.position;
   const auto & goal_pos = transformed_goal.pose.position;
@@ -160,26 +160,23 @@ nav_msgs::msg::Path ArcPlanner::createPlan(
   double y_aclck;
 
   int number_of_waypoints = theta / interpolation_resolution_;
-  int intermediate_way_point = 0.9 * number_of_waypoints;
 
-  // Finding a point near the goal pose on both arcs
-  for (int i = 0; i < intermediate_way_point; ++i) {
-    x_clck = start_pos.x + (turn_radius_ * cos(phi)) - turn_radius_ *
-      cos(
-      phi + i * interpolation_resolution_);
-    y_clck = start_pos.y - (turn_radius_ * sin(phi)) + turn_radius_ *
-      sin(
-      phi + i * interpolation_resolution_);
-  }
+  // Finding co-ordinates of the second last point on both the arc.
 
-  for (int i = number_of_waypoints; i > number_of_waypoints - intermediate_way_point; --i) {
-    x_aclck = goal_pos.x - (turn_radius_ * cos(phi)) + turn_radius_ *
-      cos(
-      phi + i * interpolation_resolution_);
-    y_aclck = goal_pos.y + (turn_radius_ * sin(phi)) - turn_radius_ *
-      sin(
-      phi + i * interpolation_resolution_);
-  }
+  x_clck = start_pos.x + (turn_radius_ * cos(phi)) - turn_radius_ *
+    cos(
+    phi + (number_of_waypoints - 1) * interpolation_resolution_);
+  y_clck = start_pos.y - (turn_radius_ * sin(phi)) + turn_radius_ *
+    sin(
+    phi + (number_of_waypoints - 1) * interpolation_resolution_);
+
+  x_aclck = goal_pos.x - (turn_radius_ * cos(phi)) + turn_radius_ *
+    cos(
+    phi + (1) * interpolation_resolution_);
+  y_aclck = goal_pos.y + (turn_radius_ * sin(phi)) - turn_radius_ *
+    sin(
+    phi + (1) * interpolation_resolution_);
+
 
   double tan_clck = atan2((goal_pos.y - y_clck), (goal_pos.x - x_clck));
   double tan_aclck = atan2((goal_pos.y - y_aclck), (goal_pos.x - x_aclck));
